@@ -1,0 +1,28 @@
+#+title: Teia
+#+authors: Josué Teodoro Moreira and Teia Developers
+
+Teia is a Simple, Fast and Reliable HyperMedia library built on top of HTMX, leveraging the Power and Simplicity of HyperMedia.
+
+* Documentation
+
+We highly encourage you to read about Teia's documentation. It goes deep into the motives, circumstances, architecture, ideas, opinions and anything else related to how it works under the hood.
+
+- [[file:docs/01-building-blocks.org][Building Blocks]] :: The concepts and ideas behind Teia
+- [[file:docs/02-workflow.org][Workflow]] :: Tips, tutorials and opinions on how to use Teia
+- [[file:docs/03-development.org][Development]] :: How to develop Teia's library on your own
+
+* Using Teia
+
+** deps.edn
+
+#+begin_src clojure
+  {:deps {j0suetm/teia {:mvn/version "0.0.1"}}}
+#+end_src
+
+** leiningen
+
+#+begin_src clojure
+  [j0suetm/teia "0.0.1"]
+#+end_src
+
+Made with ❤️ and Clojure by [Josué Teodoro Moreira](https://github.com/j0suetm) and the [Teia Developers](https://github.com/j0suetm/teia/graphs/contributors).
