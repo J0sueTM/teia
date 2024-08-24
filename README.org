@@ -25,4 +25,4 @@ We highly encourage you to read about Teia's documentation. It goes deep into th
   [j0suetm/teia "0.0.1"]
 #+end_src
 
-Made with ❤️ and Clojure by [Josué Teodoro Moreira](https://github.com/j0suetm) and the [Teia Developers](https://github.com/j0suetm/teia/graphs/contributors).
+Made with ❤️ and Clojure by [[https://github.com/j0suetm][Josué Teodoro Moreira]] and the [[https://github.com/j0suetm/teia/graphs/contributors][Teia Developers]].
