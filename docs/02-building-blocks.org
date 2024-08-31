@@ -1,0 +1,14 @@
+#+title: Building Blocks
+#+author: Josué Teodoro Moreira and Teia Developers
+
+Teia is at its core a UI library. Therefore, most of the concepts presented here have their roots on already existing UI concepts. However, take in mind that we have our own opinions and select ways of dealing with these concepts, so they might not have the same definition as the one you're accostumed to.
+
+** Components
+
+Being Teia's most minimal concept, the component is any HTML Element that can be rendered.
+
+TODO...
+
+** Sections
+
+TODO...

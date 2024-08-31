@@ -1,0 +1,30 @@
+#+title: Philosophy
+#+author: Josué Teodoro Moreira and Teia Developers
+
+Based on the philosophy of HTMX, Teia tries to go against the evolving complexity of the current JS ecosystem by providing a simple and straightforward HyperMedia library.
+
+Here are a couple of topics that we took in account when creating Teia:
+
+* 1. Simplicity
+
+#+begin_quote
+An idiot admires complexity, a genius admires simplicity ...
+
+― Terry A. Davis
+#+end_quote
+
+Teia should be a small, concise and most of all simple library. We are not revolutionizing anything, but trying to make our best efforts on demistifying the Web Development from the unnecessary complexity it has become.
+
+It's important to note that [[https://www.youtube.com/watch?v=SxdOUGdseq4][simple doesn't necessarily means easy]].
+
+* 2. Compatibility and Accessibility :: Always Available
+
+#+begin_quote
+I (j0suetm) use Emacs' builtin *eww* browser to navigate the web sometimes. It's handy, and gets the work done. However, it has minimal support for CSS and none for JS. I mostly don't care about that, because the only thing I use eww for, is to access text websites that help me with whatever I'm working at the moment.
+
+What gets on my nerves, however, are websites that simply don't render because I don't have javascript enabled. If all I'm trying to see is a two paragraph text (which has been supported by HTML for the last 30 years) about how to solve some Java Classpath problem, why should JS be necessary???
+#+end_quote
+
+That's my unique experince, but be assured that there are way worse examples where lighter and simpler websites would be better. Take for example people who have really bad internet access, who needs to do their stuff on the internet, whatever be it, and have to wait 10 minutes for a JS library to load before being able to do anything. How is that OK?
+
+With that in mind, Teia's main philosophy is about avoiding it. In the majority of cases, JS/CSS should be the cherry on the cake, not the entire party.
