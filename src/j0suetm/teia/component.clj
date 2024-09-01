@@ -71,13 +71,3 @@ inner components."))
             (map->Component compilation-failure-cmp)
             {:exception e
              :component/name name})))))))
-
-(defmacro defcmp
-  "Helper macro that defines a component.
-
-  Simply wraps `j0suetm.teia.component/->Component`."
-  [cmp-name args body]
-  `(j0suetm.teia.component/->Component
-    (keyword '~cmp-name)
-    (fn ~args
-      ~@body)))

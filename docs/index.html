@@ -2866,27 +2866,129 @@ net.brehaut.ClojureTools = (function (SH) {
   };
 })(SyntaxHighlighter);
 </script><title>teia -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">teia</h1><h2 class="project-version"></h2><br />
-</div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#j0suetm.teia.core">j0suetm.teia.core</a></li><li><a href="#j0suetm.teia.html">j0suetm.teia.html</a></li><li><a href="#j0suetm.teia.router">j0suetm.teia.router</a></li><li><a href="#j0suetm.teia.router-test">j0suetm.teia.router-test</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#j0suetm.teia.core" name="j0suetm.teia.core"><h1 class="project-name">j0suetm.teia.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Teia is a Simple, Fast and Reliable HyperMedia library built on top
+</div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#j0suetm.teia.component">j0suetm.teia.component</a></li><li><a href="#j0suetm.teia.core">j0suetm.teia.core</a></li><li><a href="#j0suetm.teia.html">j0suetm.teia.html</a></li><li><a href="#j0suetm.teia.router">j0suetm.teia.router</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#j0suetm.teia.component" name="j0suetm.teia.component"><h1 class="project-name">j0suetm.teia.component</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Teia's base concept.</p>
+</td><td class="codes"><pre class="brush: clojure">(ns j0suetm.teia.component
+  (:refer-clojure :exclude [compile]))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defprotocol Stateful
+  (build
+    [cmp]
+    [cmp props]
+    [cmp props components]
+    &quot;Builds a component map, which can be used by `compile` later.
+Inner components can be accessed and manipulated just like props, but
+are separated since they need their own state.&quot;)
+  (compile
+    [cmp]
+    &quot;Compiles component states to itself. Basically 'renders' the
+given component based on its props, after recursively 'rendering' its
+inner components.&quot;))</pre></td></tr><tr><td class="docs"><p>Barebones component for component compilation failure.</p>
+
+<p>Defined like this because the Component record isn't defined yet.</p>
+</td><td class="codes"><pre class="brush: clojure">(def compilation-failure-cmp
+  {:name :compilation-failure
+   :template (fn [{:keys [props]}]
+               [:div
+                [:p (str &quot;failed to compile component &quot;
+                         (:component/name props))]
+                (let [ex (:exception props)
+                      stacktrace (-&gt;&gt; ex
+                                      (.getStackTrace)
+                                      (map str))]
+                  [:ul
+                   [:li [:p (.getMessage ex)]]
+                   (for [trace stacktrace]
+                     [:li [:p trace]])])])})</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defrecord Component [name template]
+  Stateful
+  (build [cmp]
+    (build cmp {} []))
+  (build [cmp props]
+    (build cmp props []))
+  (build [cmp props components]
+    (merge cmp {:props props
+                :components components}))
+  (compile [cmp]
+    (let [{:keys [name template props components]} cmp]
+      (try
+        (assoc
+         cmp :compiled
+         (template
+          {:props props
+           ;; Inner components come as a list. Here we reduce them to
+           ;; a map in order for easier retrieval when applying the
+           ;; parent component
+           :components (reduce
+                        (fn [cmp-map cmp]
+                          (assoc
+                           cmp-map
+                           (:name cmp)
+                           (if-let [?compiled (:compiled cmp)]
+                             ?compiled
+                             (:compiled (compile cmp)))))
+                        {} components)}))
+        (catch Exception e
+          ;; TODO: provide better ways to handle exceptions.
+          ;; Enable the end user to control it as well.
+          (compile
+           (build
+            (map-&gt;Component compilation-failure-cmp)
+            {:exception e
+             :component/name name})))))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#j0suetm.teia.core" name="j0suetm.teia.core"><h1 class="project-name">j0suetm.teia.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Teia is a Simple, Fast and Reliable HyperMedia library built on top
 of HTMX, leveraging its Power and Simplicity.</p>
-</td><td class="codes"><pre class="brush: clojure">(ns j0suetm.teia.core)</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#j0suetm.teia.html" name="j0suetm.teia.html"><h1 class="project-name">j0suetm.teia.html</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns j0suetm.teia.core)</pre></td></tr><tr><td class="docs"><p>Helper macro that defines a component.</p>
+
+<p>Simply wraps <code>j0suetm.teia.component/-&gt;Component</code>.</p>
+</td><td class="codes"><pre class="brush: clojure">(defmacro defcmp
+  [cmp-name args body]
+  `(j0suetm.teia.component/-&gt;Component
+    (keyword '~cmp-name)
+    (fn ~args
+      ~@body)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#j0suetm.teia.html" name="j0suetm.teia.html"><h1 class="project-name">j0suetm.teia.html</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns j0suetm.teia.html)</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn populate
   [tree])</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#j0suetm.teia.router" name="j0suetm.teia.router"><h1 class="project-name">j0suetm.teia.router</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns j0suetm.teia.router
   (:require
+   [hiccup2.core :as hiccup]
    [malli.util]
    [muuntaja.core :as muuntaja]
+   [muuntaja.format.core :as muuntaja.fmt]
    [reitit.coercion.malli :as reitit.coercion.malli]
    [reitit.dev.pretty :as reitit.pretty]
    [reitit.ring :as reitit]
    [reitit.ring.coercion :as reitit.coercion]
    [reitit.ring.middleware.exception :as reitit.mddwr.ex]
    [reitit.ring.middleware.muuntaja :as reitit.mddwr.muuntaja]
-   [reitit.ring.middleware.parameters :as reitit.mddwr.params]))</pre></td></tr><tr><td class="docs">
+   [reitit.ring.middleware.parameters :as reitit.mddwr.params])
+  (:import
+   [java.io OutputStream]))</pre></td></tr><tr><td class="docs"><p>Muuntaja format to for text/html</p>
+</td><td class="codes"><pre class="brush: clojure">(def html-format
+  (let [enc-fn (fn [_]
+                 (reify
+                   ;;
+                   muuntaja.fmt/EncodeToBytes
+                   (encode-to-bytes [_ data charset]
+                     (.getBytes
+                      (str (hiccup/html data))
+                      ^String charset))
+                   ;;
+                   muuntaja.fmt/EncodeToOutputStream
+                   (encode-to-output-stream [_ data charset]
+                     (fn [^OutputStream output-stream]
+                       (.write
+                        output-stream
+                        (.getBytes
+                         (str (hiccup/html data))
+                         ^String charset))))))]
+    (muuntaja.fmt/map-&gt;Format
+     {:name &quot;text/html&quot;
+      :encoder [enc-fn]})))</pre></td></tr><tr><td class="docs"><p>Builds a basic ring router.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn build
-  [routes &amp; options]
+  [routes &amp; [options]]
   (let [{:keys [default-format]
-         :or {default-format &quot;application/edn&quot;}} options
+         ;; assumes UI router by default
+         :or {default-format &quot;text/html&quot;}} options
+        ui-router? (= default-format &quot;text/html&quot;)
         coercion (reitit.coercion.malli/create
                   {:error-keys #{:type :in :value :errors
                                  :humanized :schema}
@@ -2895,58 +2997,27 @@ of HTMX, leveraging its Power and Simplicity.</p>
                    :default-values true
                    :options nil})
         muuntaja (muuntaja/create
-                  (assoc
-                   muuntaja/default-options
-                   :default-format default-format))
-        middlewares [reitit.mddwr.ex/exception-middleware
-                     reitit.mddwr.muuntaja/format-negotiate-middleware
-                     reitit.mddwr.muuntaja/format-response-middleware
-                     reitit.mddwr.muuntaja/format-request-middleware
-                     reitit.coercion/coerce-response-middleware
-                     reitit.coercion/coerce-request-middleware
-                     reitit.mddwr.params/parameters-middleware]]
+                  (-&gt; (assoc-in
+                       muuntaja/default-options
+                       [:formats &quot;text/html&quot;]
+                       html-format)
+                      (assoc :default-format default-format)))
+        ;; doesn't need to verify response when UI router
+        middlewares (into
+                     [reitit.mddwr.ex/exception-middleware
+                      reitit.mddwr.muuntaja/format-negotiate-middleware
+                      reitit.mddwr.muuntaja/format-request-middleware
+                      reitit.mddwr.muuntaja/format-response-middleware
+                      reitit.coercion/coerce-request-middleware
+                      reitit.mddwr.params/parameters-middleware]
+                     (when ui-router?
+                       [reitit.coercion/coerce-response-middleware]))]
     (reitit/router
      routes
      {:exception reitit.pretty/exception
       :data {:coercion coercion
              :muuntaja muuntaja
-             :middleware middlewares}})))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#j0suetm.teia.router-test" name="j0suetm.teia.router-test"><h1 class="project-name">j0suetm.teia.router-test</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(ns j0suetm.teia.router-test
-  (:require
-   [clojure.test :as t]
-   [j0suetm.teia.router :as teia.router]
-   [muuntaja.core :as muuntaja]
-   [reitit.ring :as reitit]))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(t/deftest build-test
-  (let [routes [[&quot;/users/:name&quot;
-                 {:get
-                  {:parameters {:path {:name :string}}
-                   :responses {200 [:map [:username :string]]}
-                   :handler (fn [{:keys [headers path-params]}]
-                              (let [{:keys [name]} path-params]
-                                {:status 200
-                                 :headers (when-let [accept (:accept headers)]
-                                            {:content-type accept})
-                                 :body {:username name}}))}}]]]
-    (t/testing &quot;supported formats;&quot;
-      (t/testing &quot;default format;&quot;
-        (t/is (= {:username &quot;j0suetm&quot;}
-                 (-&gt;&gt; ((reitit/ring-handler (teia.router/build routes))
-                       {:request-method :get
-                        :uri &quot;/users/j0suetm&quot;})
-                      (:body)
-                      (muuntaja/decode &quot;application/edn&quot;)))))
-      (t/testing &quot;others (json only, for simplicity);&quot;
-        (t/is (= {:username &quot;j0suetm&quot;}
-                 (-&gt;&gt; ((reitit/ring-handler
-                        (teia.router/build
-                         routes
-                         {:default-format &quot;application/json&quot;}))
-                       {:request-method :get
-                        :uri &quot;/users/j0suetm&quot;})
-                      (:body)
-                      (muuntaja/decode &quot;application/json&quot;))))))
-    (t/testing &quot;html format;&quot;)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/clj-commons/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_j0suetm.teia.core">j0suetm.teia.core</li><li class="floating-toc-li" id="floating-toc_j0suetm.teia.html">j0suetm.teia.html</li><li class="floating-toc-li" id="floating-toc_j0suetm.teia.router">j0suetm.teia.router</li><li class="floating-toc-li" id="floating-toc_j0suetm.teia.router-test">j0suetm.teia.router-test</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+             :middleware middlewares}})))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/clj-commons/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_j0suetm.teia.component">j0suetm.teia.component</li><li class="floating-toc-li" id="floating-toc_j0suetm.teia.core">j0suetm.teia.core</li><li class="floating-toc-li" id="floating-toc_j0suetm.teia.html">j0suetm.teia.html</li><li class="floating-toc-li" id="floating-toc_j0suetm.teia.router">j0suetm.teia.router</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
 SyntaxHighlighter.all();
 
 // hackity hack
