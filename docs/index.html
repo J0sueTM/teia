@@ -3001,27 +3001,6 @@ of HTMX, leveraging its Power and Simplicity.</p>
    (mapv
     (partial apply component-route-&gt;reitit-route)
     sibling-routes)))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(comment
-  (def my-routes
-    [[&quot;/greet/:name&quot;
-      {:get
-       {:component (teia.cmp/-&gt;Component
-                    :greeting
-                    (fn [{:keys [greeting name]
-                          :or {greeting &quot;hello&quot;}}]
-                      [:p (str greeting &quot; &quot; name)]))
-        :parameters {:path {:name string?}
-                     :headers {:greeting string?}}
-        :handler (fn [{:keys [path-params headers]}]
-                   (prn headers)
-                   {:status 200
-                    :body {:name (:name path-params)
-                           :greeting (:greeting headers)}})}}]])
-  ((reitit/ring-handler (build my-routes))
-   {:request-method :get
-    :uri &quot;/greet/darling&quot;
-    :headers {:greeting &quot;hope all is well&quot;}})
-  ;;)</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def component-&gt;html-encoder
   (reify
     muuntaja.fmt/EncodeToBytes

@@ -54,30 +54,6 @@
     (partial apply component-route->reitit-route)
     sibling-routes)))
 
-(comment
-  (def my-routes
-    [["/greet/:name"
-      {:get
-       {:component (teia.cmp/->Component
-                    :greeting
-                    (fn [{:keys [greeting name]
-                          :or {greeting "hello"}}]
-                      [:p (str greeting " " name)]))
-        :parameters {:path {:name string?}
-                     :headers {:greeting string?}}
-        :handler (fn [{:keys [path-params headers]}]
-                   (prn headers)
-                   {:status 200
-                    :body {:name (:name path-params)
-                           :greeting (:greeting headers)}})}}]])
-
-  ((reitit/ring-handler (build my-routes))
-   {:request-method :get
-    :uri "/greet/darling"
-    :headers {:greeting "hope all is well"}})
-  ;;
-  )
-
 (def component->html-encoder
   (reify
     muuntaja.fmt/EncodeToBytes
