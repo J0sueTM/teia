@@ -1,7 +1,7 @@
 #+title: Teia
 #+author: Josué Teodoro Moreira and Teia Developers
 
-Teia is a Simple, Fast and Reliable HyperMedia library built on top of HTMX, leveraging its Power and Simplicity.
+Teia is a Simple, Fast and Reliable HyperMedia library.
 
 * Documentation
 
