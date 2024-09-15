@@ -1,6 +1,7 @@
 (ns j0suetm.teia.router
   (:require
    [hiccup2.core :as hiccup]
+   [j0suetm.teia.component :as teia.cmp]
    [malli.util]
    [muuntaja.core :as muuntaja]
    [muuntaja.format.core :as muuntaja.fmt]
@@ -14,25 +15,96 @@
   (:import
    [java.io OutputStream]))
 
+(defn component-route-handler
+  [handler component request]
+  (try
+    ;; The handler's response should be a map, which will be used
+    ;; as the props to build the component.
+    {:status 200
+     :body (->> (handler request)
+                (:body)
+                (teia.cmp/build component)
+                (teia.cmp/compile))}
+    (catch Exception e
+      {:status 500
+       :body (teia.cmp/build
+              (teia.cmp/map->Component teia.cmp/failure-cmp)
+              {:reason "failed to handle component route"
+               :exception e})})))
+
+(defn component-route->reitit-route
+  "Adapts a component route to a reitit router.
+
+  Recursively applies itself to any sibling route."
+  [uri methods & sibling-routes]
+  (into
+   [uri (reduce-kv
+         (fn [methods method
+              {:keys [handler component]
+               :as definition}]
+           (let [handler' (partial component-route-handler
+                                   handler component)]
+             (assoc methods method
+                    (if component
+                      (-> (assoc definition :handler handler')
+                          (dissoc :component))
+                      definition))))
+         {} methods)]
+   (mapv
+    (partial apply component-route->reitit-route)
+    sibling-routes)))
+
+(comment
+  (def my-routes
+    [["/greet/:name"
+      {:get
+       {:component (teia.cmp/->Component
+                    :greeting
+                    (fn [{:keys [greeting name]
+                          :or {greeting "hello"}}]
+                      [:p (str greeting " " name)]))
+        :parameters {:path {:name string?}
+                     :headers {:greeting string?}}
+        :handler (fn [{:keys [path-params headers]}]
+                   (prn headers)
+                   {:status 200
+                    :body {:name (:name path-params)
+                           :greeting (:greeting headers)}})}}]])
+
+  ((reitit/ring-handler (build my-routes))
+   {:request-method :get
+    :uri "/greet/darling"
+    :headers {:greeting "hope all is well"}})
+  ;;
+  )
+
+(def component->html-encoder
+  (reify
+    muuntaja.fmt/EncodeToBytes
+    (encode-to-bytes [_ data charset]
+      (-> (if (teia.cmp/component? data)
+            (:compiled (teia.cmp/compile data))
+            data)
+          (hiccup/html)
+          (str)
+          (.getBytes ^String charset)))
+
+    muuntaja.fmt/EncodeToOutputStream
+    (encode-to-output-stream [_ data charset]
+      (fn [^OutputStream output-stream]
+        (.write
+         output-stream
+         (-> (if (teia.cmp/component? data)
+               (:compiled (teia.cmp/compile data))
+               data)
+             (hiccup/html)
+             (str)
+             (.getBytes ^String charset)))))))
+
 (def html-format
-  "Muuntaja format to for text/html"
+  "Muuntaja format for text/html"
   (let [enc-fn (fn [_]
-                 (reify
-                   ;;
-                   muuntaja.fmt/EncodeToBytes
-                   (encode-to-bytes [_ data charset]
-                     (.getBytes
-                      (str (hiccup/html data))
-                      ^String charset))
-                   ;;
-                   muuntaja.fmt/EncodeToOutputStream
-                   (encode-to-output-stream [_ data charset]
-                     (fn [^OutputStream output-stream]
-                       (.write
-                        output-stream
-                        (.getBytes
-                         (str (hiccup/html data))
-                         ^String charset))))))]
+                 component->html-encoder)]
     (muuntaja.fmt/map->Format
      {:name "text/html"
       :encoder [enc-fn]})))
@@ -72,7 +144,7 @@
                      (when ui-router?
                        [reitit.coercion/coerce-response-middleware]))]
     (reitit/router
-     routes
+     (map #(apply component-route->reitit-route %) routes)
      {:exception reitit.pretty/exception
       :data {:coercion coercion
              :muuntaja muuntaja

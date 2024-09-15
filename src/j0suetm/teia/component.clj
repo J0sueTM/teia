@@ -17,15 +17,14 @@ are separated since they need their own state.")
 given component based on its props, after recursively 'rendering' its
 inner components."))
 
-(def compilation-failure-cmp
-  "Barebones component for component compilation failure.
+(def failure-cmp
+  "Barebones component for failure showcase.
 
   Defined like this because the Component record isn't defined yet."
-  {:name :compilation-failure
+  {:name :failure
    :template (fn [{:keys [props]}]
                [:div
-                [:p (str "failed to compile component "
-                         (:component/name props))]
+                [:p (:reason props)]
                 (let [ex (:exception props)
                       stacktrace (->> ex
                                       (.getStackTrace)
@@ -68,6 +67,10 @@ inner components."))
           ;; Enable the end user to control it as well.
           (compile
            (build
-            (map->Component compilation-failure-cmp)
-            {:exception e
-             :component/name name})))))))
+            (map->Component failure-cmp)
+            {:reason (str "failed to compile component " name)
+             :exception e})))))))
+
+(defn component?
+  [data]
+  (and (:name data) (:template data)))
