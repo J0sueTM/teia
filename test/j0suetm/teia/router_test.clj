@@ -5,7 +5,6 @@
    [j0suetm.teia.router :as teia.router]
    [muuntaja.core :as muuntaja]
    [reitit.ring :as reitit]))
-
 (t/deftest component-route-handler-test
   (t/is (= [:p "hello teia"]
            (:compiled
@@ -21,31 +20,31 @@
               {:path-params {:name "teia"}}))))))
 
 (t/deftest component-route->reitit-route-test
-  (t/testing "single route;"
-    (t/is (= '(nil nil)
-             (->> ["/foo/bar"
-                   {:get {:component (teia.cmp/->Component
-                                      :empty [:div])
-                          :handler (fn [_] {})}
-                    :post {:component (teia.cmp/->Component
+  [(t/testing "single route;"
+     (t/is (= '(nil nil)
+              (->> ["/foo/bar"
+                    {:get {:component (teia.cmp/->Component
                                        :empty [:div])
-                           :handler (fn [_] {})}}]
-                  (apply teia.router/component-route->reitit-route)
-                  (second)
-                  (vals)
-                  (map :component)))))
-  (t/testing "multiple routes;"
-    (let [route (->> ["/foo"
-                      {:get {:component (teia.cmp/->Component
-                                         :empty [:div])
-                             :handler (fn [_] {})}}
-                      ["/bar"
+                           :handler (fn [_] {})}
+                     :post {:component (teia.cmp/->Component
+                                        :empty [:div])
+                            :handler (fn [_] {})}}]
+                   (apply teia.router/component-route->reitit-route)
+                   (second)
+                   (vals)
+                   (map :component)))))
+   (t/testing "multiple routes;"
+     (let [route (->> ["/foo"
                        {:get {:component (teia.cmp/->Component
                                           :empty [:div])
-                              :handler (fn [_] {})}}]]
-                     (apply teia.router/component-route->reitit-route))]
-      [(t/is (not (get-in route [2 :get :component])))
-       (t/is (not (get-in route [3 2 :get :component])))])))
+                              :handler (fn [_] {})}}
+                       ["/bar"
+                        {:get {:component (teia.cmp/->Component
+                                           :empty [:div])
+                               :handler (fn [_] {})}}]]
+                      (apply teia.router/component-route->reitit-route))]
+       [(t/is (not (get-in route [2 :get :component])))
+        (t/is (not (get-in route [3 2 :get :component])))]))])
 
 (t/deftest build-test
   [(t/testing "supported formats;"
@@ -99,7 +98,6 @@
                      {:component (teia.cmp/->Component
                                   :greeting
                                   (fn [{:keys [props]}]
-                                    (prn (:greeting props))
                                     [:p (str (:greeting props)
                                              ", "
                                              (:name props)
@@ -108,12 +106,29 @@
                                    :headers {:greeting string?}}
                       :handler (fn [{:keys [path-params headers]}]
                                  {:status 200
-                                  :body (merge path-params headers)})}}]]]
-       (t/is (= "<p>hope all is well, darling!</p>"
-                (->> ((reitit/ring-handler
-                       (teia.router/build routes))
-                      {:request-method :get
-                       :uri "/greet/darling"
-                       :headers {:greeting "hope all is well"}})
-                     (:body)
-                     (slurp))))))])
+                                  :body (merge path-params headers)})}
+                     :post {:component (teia.cmp/->Component
+                                        :failing
+                                        (fn [_]
+                                          (throw
+                                           (Exception.
+                                            "should fail"))))
+                            :handler (fn [_]
+                                       {:status 200
+                                        :body {}})}}]]]
+       [(t/is (= "<p>hope all is well, darling!</p>"
+                 (->> ((reitit/ring-handler
+                        (teia.router/build routes))
+                       {:request-method :get
+                        :uri "/greet/darling"
+                        :headers {:greeting "hope all is well"}})
+                      (:body)
+                      (slurp))))
+        (t/is (->> ((reitit/ring-handler
+                     (teia.router/build routes))
+                    {:request-method :post
+                     :uri "/greet/failing"})
+                   (:body)
+                   (slurp)
+                   (re-find
+                    #"failed to compile component :failing")))]))])
