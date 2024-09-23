@@ -97,7 +97,7 @@
   [handler component request]
   (try
     ;; The handler's response should be a map containing the props and
-    ;; the inner components be used by the to-be-built component.
+    ;; the inner components to be used by a route's component.
     (let [{:keys [status props components]
            :or {status 200
                 props {}
