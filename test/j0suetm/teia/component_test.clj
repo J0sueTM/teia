@@ -3,8 +3,6 @@
    [clojure.test :as t]
    [j0suetm.teia.component :as teia.cmp :refer [$]]))
 
-(defn inspect [a] (prn :a a) a)
-
 (t/deftest compile-test
   (t/testing "props;"
     (t/is (= [:div
