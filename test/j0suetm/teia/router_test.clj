@@ -1,10 +1,11 @@
 (ns j0suetm.teia.router-test
   (:require
    [clojure.test :as t]
-   [j0suetm.teia.component :as teia.cmp]
+   [j0suetm.teia.component :as teia.cmp :refer [$]]
    [j0suetm.teia.router :as teia.router]
    [muuntaja.core :as muuntaja]
    [reitit.ring :as reitit]))
+
 (t/deftest component-route-handler-test
   (t/is (= [:p "hello teia"]
            (:compiled
@@ -12,7 +13,7 @@
              (teia.router/component-route-handler
               (fn [{:keys [path-params]}]
                 {:status 200
-                 :body (select-keys path-params [:name])})
+                 :props (select-keys path-params [:name])})
               (teia.cmp/map->Component
                {:name :says-hello
                 :template (fn [{:keys [props]}]
@@ -71,6 +72,7 @@
                           :uri "/users/teia/plain-html"})
                         (:body)
                         (slurp)))))
+
         (t/testing "edn;"
           (t/is (= {:username "j0suetm"}
                    (->> ((reitit/ring-handler
@@ -81,6 +83,7 @@
                           :uri "/users/j0suetm"})
                         (:body)
                         (muuntaja/decode "application/edn")))))
+
         (t/testing "json;"
           (t/is (= {:username "j0suetm"}
                    (->> ((reitit/ring-handler
@@ -102,20 +105,39 @@
                                              ", "
                                              (:name props)
                                              "!")]))
-                      :parameters {:path {:name string?}
-                                   :headers {:greeting string?}}
+                      :parameters {:path {:name :string}
+                                   :headers {:greeting :string}}
                       :handler (fn [{:keys [path-params headers]}]
                                  {:status 200
-                                  :body (merge path-params headers)})}
+                                  :props (merge path-params headers)})}
                      :post {:component (teia.cmp/->Component
                                         :failing
                                         (fn [_]
-                                          (throw
-                                           (Exception.
-                                            "should fail"))))
+                                          (throw (Exception. "should fail"))))
                             :handler (fn [_]
-                                       {:status 200
-                                        :body {}})}}]]]
+                                       {:status 200})}}]
+                   ["/with-inner-components/:username"
+                    {:get
+                     {:component (teia.cmp/->Component
+                                  :with-inner-components
+                                  (fn [{:keys [props components]}]
+                                    (let [username (:username props)]
+                                      [:div
+                                       [:p username]
+                                       ($ (:button components)
+                                          {:message (str "click here, "
+                                                         username)})])))
+                      :parameters {:path {:username :string}}
+                      :handler (fn [{:keys [path-params]}]
+                                 {:status 200
+                                  :props (select-keys
+                                          path-params
+                                          [:username])
+                                  :components [(teia.cmp/->Component
+                                                :button
+                                                (fn [{:keys [props]}]
+                                                  [:button
+                                                   (:message props)]))]})}}]]]
        [(t/is (= "<p>hope all is well, darling!</p>"
                  (->> ((reitit/ring-handler
                         (teia.router/build routes))
@@ -124,6 +146,7 @@
                         :headers {:greeting "hope all is well"}})
                       (:body)
                       (slurp))))
+
         (t/is (->> ((reitit/ring-handler
                      (teia.router/build routes))
                     {:request-method :post
@@ -131,4 +154,12 @@
                    (:body)
                    (slurp)
                    (re-find
-                    #"failed to compile component :failing")))]))])
+                    #"failed to compile component :failing")))
+
+        (t/is (= "<div><p>j0suetm</p><button>click here, j0suetm</button></div>"
+                 (->> ((reitit/ring-handler
+                        (teia.router/build routes))
+                       {:request-method :get
+                        :uri "/with-inner-components/j0suetm"})
+                      (:body)
+                      (slurp))))]))])

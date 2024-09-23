@@ -18,13 +18,16 @@
 (defn component-route-handler
   [handler component request]
   (try
-    ;; The handler's response should be a map, which will be used
-    ;; as the props to build the component.
-    {:status 200
-     :body (->> (handler request)
-                (:body)
-                (teia.cmp/build component)
-                (teia.cmp/compile))}
+    ;; The handler's response should be a map containing the props and
+    ;; the inner components be used by the to-be-built component.
+    (let [{:keys [status props components]
+           :or {status 200
+                props {}
+                components []}} (handler request)]
+      (clojure.pprint/pprint components)
+      {:status status
+       :body (teia.cmp/compile
+              (teia.cmp/build component props components))})
     (catch Exception e
       {:status 500
        :body (teia.cmp/build

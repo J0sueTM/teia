@@ -26,9 +26,7 @@ inner components."))
                [:div
                 [:p (:reason props)]
                 (let [ex (:exception props)
-                      stacktrace (->> ex
-                                      (.getStackTrace)
-                                      (map str))]
+                      stacktrace (map str (.getStackTrace ex))]
                   [:ul
                    [:li [:p (.getMessage ex)]]
                    (for [trace stacktrace]
@@ -36,14 +34,18 @@ inner components."))
 
 (defrecord Component [name template]
   Stateful
-  (build [cmp]
+  (build
+    [cmp]
     (build cmp {} []))
-  (build [cmp props]
+  (build
+    [cmp props]
     (build cmp props []))
-  (build [cmp props components]
+  (build
+    [cmp props components]
     (merge cmp {:props props
                 :components components}))
-  (compile [cmp]
+  (compile
+    [cmp]
     (let [{:keys [name template props components]} cmp]
       (try
         (assoc
@@ -58,9 +60,7 @@ inner components."))
                           (assoc
                            cmp-map
                            (:name cmp)
-                           (if-let [?compiled (:compiled cmp)]
-                             ?compiled
-                             (:compiled (compile cmp)))))
+                           (or (:compiled cmp) cmp)))
                         {} components)}))
         (catch Exception e
           ;; TODO: provide better ways to handle exceptions.
@@ -70,6 +70,16 @@ inner components."))
             (map->Component failure-cmp)
             {:reason (str "failed to compile component " name)
              :exception e})))))))
+
+;; Alias to pipe `build`->`compile` directly. Makes life easier when
+;; building a component from within another one.
+(defn $
+  ([cmp] ($ cmp {} []))
+  ([cmp props] ($ cmp props []))
+  ([cmp props components]
+   (:compiled
+    (compile
+     (build cmp props components)))))
 
 (defn component?
   [data]
