@@ -2890,23 +2890,25 @@ inner components.&quot;))</pre></td></tr><tr><td class="docs"><p>Barebones compo
                [:div
                 [:p (:reason props)]
                 (let [ex (:exception props)
-                      stacktrace (-&gt;&gt; ex
-                                      (.getStackTrace)
-                                      (map str))]
+                      stacktrace (map str (.getStackTrace ex))]
                   [:ul
                    [:li [:p (.getMessage ex)]]
                    (for [trace stacktrace]
                      [:li [:p trace]])])])})</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defrecord Component [name template]
   Stateful
-  (build [cmp]
+  (build
+    [cmp]
     (build cmp {} []))
-  (build [cmp props]
+  (build
+    [cmp props]
     (build cmp props []))
-  (build [cmp props components]
+  (build
+    [cmp props components]
     (merge cmp {:props props
                 :components components}))
-  (compile [cmp]
+  (compile
+    [cmp]
     (let [{:keys [name template props components]} cmp]
       (try
         (assoc
@@ -2921,9 +2923,7 @@ inner components.&quot;))</pre></td></tr><tr><td class="docs"><p>Barebones compo
                           (assoc
                            cmp-map
                            (:name cmp)
-                           (if-let [?compiled (:compiled cmp)]
-                             ?compiled
-                             (:compiled (compile cmp)))))
+                           (or (:compiled cmp) cmp)))
                         {} components)}))
         (catch Exception e
           ;; TODO: provide better ways to handle exceptions.
@@ -2932,7 +2932,15 @@ inner components.&quot;))</pre></td></tr><tr><td class="docs"><p>Barebones compo
            (build
             (map-&gt;Component failure-cmp)
             {:reason (str &quot;failed to compile component &quot; name)
-             :exception e})))))))</pre></td></tr><tr><td class="docs">
+             :exception e})))))))</pre></td></tr><tr><td class="docs"><p>Alias to pipe <code>build</code>-><code>compile</code> directly. Makes life easier when
+building a component from within another one.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn $
+  ([cmp] ($ cmp {} []))
+  ([cmp props] ($ cmp props []))
+  ([cmp props components]
+   (:compiled
+    (compile
+     (build cmp props components)))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn component?
   [data]
   (and (:name data) (:template data)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#j0suetm.teia.core" name="j0suetm.teia.core"><h1 class="project-name">j0suetm.teia.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Teia is a Simple, Fast and Reliable HyperMedia library built on top
@@ -2968,13 +2976,16 @@ of HTMX, leveraging its Power and Simplicity.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn component-route-handler
   [handler component request]
   (try
-    ;; The handler's response should be a map, which will be used
-    ;; as the props to build the component.
-    {:status 200
-     :body (-&gt;&gt; (handler request)
-                (:body)
-                (teia.cmp/build component)
-                (teia.cmp/compile))}
+    ;; The handler's response should be a map containing the props and
+    ;; the inner components be used by the to-be-built component.
+    (let [{:keys [status props components]
+           :or {status 200
+                props {}
+                components []}} (handler request)]
+      (clojure.pprint/pprint components)
+      {:status status
+       :body (teia.cmp/compile
+              (teia.cmp/build component props components))})
     (catch Exception e
       {:status 500
        :body (teia.cmp/build
