@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html><head><meta charset="utf-8" content="text/html" http-equiv="Content-Type" /><meta name="description" /><style type="text/css">/**
+<html><head><meta charset="utf-8" content="text/html" http-equiv="Content-Type" /><meta content="Teia is a Simple, Fast and Reliable HyperMedia library." name="description" /><style type="text/css">/**
  * SyntaxHighlighter
  * http://alexgorbatchev.com/SyntaxHighlighter
  *
@@ -2865,23 +2865,42 @@ net.brehaut.ClojureTools = (function (SH) {
     build_tree: build_tree
   };
 })(SyntaxHighlighter);
-</script><title>teia -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">teia</h1><h2 class="project-version"></h2><br />
-</div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#j0suetm.teia.component">j0suetm.teia.component</a></li><li><a href="#j0suetm.teia.core">j0suetm.teia.core</a></li><li><a href="#j0suetm.teia.html">j0suetm.teia.html</a></li><li><a href="#j0suetm.teia.router">j0suetm.teia.router</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#j0suetm.teia.component" name="j0suetm.teia.component"><h1 class="project-name">j0suetm.teia.component</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Teia's base concept.</p>
+</script><title>teia -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">teia</h1><h2 class="project-version"></h2><br /><p>Teia is a Simple, Fast and Reliable HyperMedia library.</p>
+</div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#j0suetm.teia.component">j0suetm.teia.component</a></li><li><a href="#j0suetm.teia.core">j0suetm.teia.core</a></li><li><a href="#j0suetm.teia.html">j0suetm.teia.html</a></li><li><a href="#j0suetm.teia.router">j0suetm.teia.router</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#j0suetm.teia.component" name="j0suetm.teia.component"><h1 class="project-name">j0suetm.teia.component</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h1>Components</h1>
+
+<p>Components are Teia's most basic building block.</p>
+
+<p>A component contains the following data:</p>
+
+<ul>
+<li><p><code>:name</code>     An identifiable name</p></li>
+<li><p><code>:template</code> A function that accepts its state and returns the HTML
+          template.</p></li>
+<li><p><code>:props</code>    Its inner state.</p></li>
+<li><p><code>:components</code> Its inner components, passed by parameters to minimize
+            external state. This is helpful when testing later on.
+            By having all its data from within, it becomes simpler
+            to manipulate it, beit whatever.</p></li>
+</ul>
 </td><td class="codes"><pre class="brush: clojure">(ns j0suetm.teia.component
-  (:refer-clojure :exclude [compile]))</pre></td></tr><tr><td class="docs">
+  (:refer-clojure :exclude [compile]))</pre></td></tr><tr><td class="docs"><h2>Lifetime</h2>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>The Stateful protocol defines the point on when a component has
+both props and inner components defined.</p>
+
+<p><code>build</code> builds a component map, which can be used by <code>compile</code> later.
+Inner components can be accessed and manipulated just like props, but
+are separated since they need their own state.</p>
+
+<p><code>compile</code> compiles component states to itself. Basically <code>renders</code>
+the given component based on its props, after recursively <code>rendering</code>
+its inner components.</p>
 </td><td class="codes"><pre class="brush: clojure">(defprotocol Stateful
   (build
     [cmp]
     [cmp props]
-    [cmp props components]
-    &quot;Builds a component map, which can be used by `compile` later.
-Inner components can be accessed and manipulated just like props, but
-are separated since they need their own state.&quot;)
+    [cmp props components])
   (compile
-    [cmp]
-    &quot;Compiles component states to itself. Basically 'renders' the
-given component based on its props, after recursively 'rendering' its
-inner components.&quot;))</pre></td></tr><tr><td class="docs"><p>Barebones component for failure showcase.</p>
+    [cmp]))</pre></td></tr><tr><td class="docs"><p>Barebones component for failure showcase.</p>
 
 <p>Defined like this because the Component record isn't defined yet.</p>
 </td><td class="codes"><pre class="brush: clojure">(def failure-cmp
@@ -2894,7 +2913,12 @@ inner components.&quot;))</pre></td></tr><tr><td class="docs"><p>Barebones compo
                   [:ul
                    [:li [:p (.getMessage ex)]]
                    (for [trace stacktrace]
-                     [:li [:p trace]])])])})</pre></td></tr><tr><td class="docs">
+                     [:li [:p trace]])])])})</pre></td></tr><tr><td class="docs"><p>Inner components come as a list. Here we reduce them to
+a map in order for easier retrieval when applying the
+parent component</p>
+
+<p>TODO: provide better ways to handle exceptions.
+Enable the end user to control it as well.</p>
 </td><td class="codes"><pre class="brush: clojure">(defrecord Component [name template]
   Stateful
   (build
@@ -2915,9 +2939,6 @@ inner components.&quot;))</pre></td></tr><tr><td class="docs"><p>Barebones compo
          cmp :compiled
          (template
           {:props props
-           ;; Inner components come as a list. Here we reduce them to
-           ;; a map in order for easier retrieval when applying the
-           ;; parent component
            :components (reduce
                         (fn [cmp-map cmp]
                           (assoc
@@ -2926,8 +2947,6 @@ inner components.&quot;))</pre></td></tr><tr><td class="docs"><p>Barebones compo
                            (or (:compiled cmp) cmp)))
                         {} components)}))
         (catch Exception e
-          ;; TODO: provide better ways to handle exceptions.
-          ;; Enable the end user to control it as well.
           (compile
            (build
             (map-&gt;Component failure-cmp)
@@ -2943,8 +2962,7 @@ building a component from within another one.</p>
      (build cmp props components)))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn component?
   [data]
-  (and (:name data) (:template data)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#j0suetm.teia.core" name="j0suetm.teia.core"><h1 class="project-name">j0suetm.teia.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Teia is a Simple, Fast and Reliable HyperMedia library built on top
-of HTMX, leveraging its Power and Simplicity.</p>
+  (instance? Component data))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#j0suetm.teia.core" name="j0suetm.teia.core"><h1 class="project-name">j0suetm.teia.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Teia is a Simple, Fast and Reliable HyperMedia library.</p>
 </td><td class="codes"><pre class="brush: clojure">(ns j0suetm.teia.core)</pre></td></tr><tr><td class="docs"><p>Helper macro that defines a component.</p>
 
 <p>Simply wraps <code>j0suetm.teia.component/-&gt;Component</code>.</p>
@@ -2956,7 +2974,11 @@ of HTMX, leveraging its Power and Simplicity.</p>
       ~@body)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#j0suetm.teia.html" name="j0suetm.teia.html"><h1 class="project-name">j0suetm.teia.html</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns j0suetm.teia.html)</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn populate
-  [tree])</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#j0suetm.teia.router" name="j0suetm.teia.router"><h1 class="project-name">j0suetm.teia.router</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+  [tree])</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#j0suetm.teia.router" name="j0suetm.teia.router"><h1 class="project-name">j0suetm.teia.router</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h1>Routing</h1>
+
+<p>Teia eases the process of routing a component. Besides having this
+as its priority, it still offers support for other purposes, like
+a <code>application/edn</code> router.</p>
 </td><td class="codes"><pre class="brush: clojure">(ns j0suetm.teia.router
   (:require
    [hiccup2.core :as hiccup]
@@ -2972,17 +2994,79 @@ of HTMX, leveraging its Power and Simplicity.</p>
    [reitit.ring.middleware.muuntaja :as reitit.mddwr.muuntaja]
    [reitit.ring.middleware.parameters :as reitit.mddwr.params])
   (:import
-   [java.io OutputStream]))</pre></td></tr><tr><td class="docs">
+   [java.io OutputStream]))</pre></td></tr><tr><td class="docs"><p>Muuntaja encoder that renders a given component through hiccup.</p>
+
+<p>See: <a href="https://github.com/metosin/muuntaja/blob/master/modules/muuntaja/src/muuntaja/format/json.clj#L39">https://github.com/metosin/muuntaja/blob/master/modules/muuntaja/src/muuntaja/format/json.clj#L39</a></p>
+</td><td class="codes"><pre class="brush: clojure">(def component-&gt;html-encoder
+  (reify
+    muuntaja.fmt/EncodeToBytes
+    (encode-to-bytes [_ data charset]
+      (-&gt; (if (teia.cmp/component? data)
+            (:compiled (teia.cmp/compile data))
+            data)
+          (hiccup/html)
+          (str)
+          (.getBytes ^String charset)))
+    muuntaja.fmt/EncodeToOutputStream
+    (encode-to-output-stream [_ data charset]
+      (fn [^OutputStream output-stream]
+        (.write
+         output-stream
+         (-&gt; (if (teia.cmp/component? data)
+               (:compiled (teia.cmp/compile data))
+               data)
+             (hiccup/html)
+             (str)
+             (.getBytes ^String charset)))))))</pre></td></tr><tr><td class="docs"><p>Muuntaja format for text/html</p>
+</td><td class="codes"><pre class="brush: clojure">(def html-format
+  (let [enc-fn (fn [_]
+                 component-&gt;html-encoder)]
+    (muuntaja.fmt/map-&gt;Format
+     {:name &quot;text/html&quot;
+      :encoder [enc-fn]})))</pre></td></tr><tr><td class="docs"><h2>Route</h2>
+
+<p>Teia uses reitit in its back-end. So you can define routes the same
+way you have been doing with reitit, while also being able to define
+component routes in-between the other routes. Teia will parse them
+for you, and re-arrange the entire route tree, with reitit routes
+wrapping your pre-defined component routes.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>For example, a sample component route defined like this:</p>
+
+<p>will be adapted to:</p>
+
+<p>which renders your component, using the states from
+the handler function.</p>
+</td><td class="codes"><pre class="brush: clojure">(comment
+  [&quot;/greet/:name&quot;
+   {:get
+    {:component (teia.cmp/-&gt;Component
+                 :greeting
+                 (fn [{:keys [props]}]
+                   [:p (str (:greeting props) &quot;, &quot;
+                            (:name props) &quot;!&quot;)]))
+     :parameters {:path {:name :string}
+                  :headers {:greeting :string}}
+     :handler (fn [{:keys [path-params headers]}]
+                {:status 200
+                 :props (merge path-params headers)})}}]
+  [&quot;/greet/:name&quot;
+   {:get
+    {:parameters {:path {:name :string}
+                  :headers {:greeting :string}}
+     :handler 'j0suetm.teia.router/component-route-handler
+     }}]
+  )</pre></td></tr><tr><td class="docs"><p>Generic reitit handler that uses the return from the defined
+handler as the state to render a route's component.</p>
+
+<p>The handler's response should be a map containing the props and
+the inner components be used by the to-be-built component.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn component-route-handler
   [handler component request]
   (try
-    ;; The handler's response should be a map containing the props and
-    ;; the inner components be used by the to-be-built component.
     (let [{:keys [status props components]
            :or {status 200
                 props {}
                 components []}} (handler request)]
-      (clojure.pprint/pprint components)
       {:status status
        :body (teia.cmp/compile
               (teia.cmp/build component props components))})
@@ -3011,38 +3095,20 @@ of HTMX, leveraging its Power and Simplicity.</p>
          {} methods)]
    (mapv
     (partial apply component-route-&gt;reitit-route)
-    sibling-routes)))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(def component-&gt;html-encoder
-  (reify
-    muuntaja.fmt/EncodeToBytes
-    (encode-to-bytes [_ data charset]
-      (-&gt; (if (teia.cmp/component? data)
-            (:compiled (teia.cmp/compile data))
-            data)
-          (hiccup/html)
-          (str)
-          (.getBytes ^String charset)))
-    muuntaja.fmt/EncodeToOutputStream
-    (encode-to-output-stream [_ data charset]
-      (fn [^OutputStream output-stream]
-        (.write
-         output-stream
-         (-&gt; (if (teia.cmp/component? data)
-               (:compiled (teia.cmp/compile data))
-               data)
-             (hiccup/html)
-             (str)
-             (.getBytes ^String charset)))))))</pre></td></tr><tr><td class="docs"><p>Muuntaja format for text/html</p>
-</td><td class="codes"><pre class="brush: clojure">(def html-format
-  (let [enc-fn (fn [_]
-                 component-&gt;html-encoder)]
-    (muuntaja.fmt/map-&gt;Format
-     {:name &quot;text/html&quot;
-      :encoder [enc-fn]})))</pre></td></tr><tr><td class="docs"><p>Builds a basic ring router.</p>
+    sibling-routes)))</pre></td></tr><tr><td class="docs"><p>Builds a reitit router, adapting component routes to reitit routes
+through the way.</p>
+
+<p>Options:</p>
+
+<ul>
+<li><code>:default-format</code> The response data format. UI router, i.e <code>text/html</code>
+                by default.</li>
+</ul>
+
+<p>No need to verify response when UI router.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn build
   [routes &amp; [options]]
   (let [{:keys [default-format]
-         ;; assumes UI router by default
          :or {default-format &quot;text/html&quot;}} options
         ui-router? (= default-format &quot;text/html&quot;)
         coercion (reitit.coercion.malli/create
@@ -3058,7 +3124,6 @@ of HTMX, leveraging its Power and Simplicity.</p>
                        [:formats &quot;text/html&quot;]
                        html-format)
                       (assoc :default-format default-format)))
-        ;; doesn't need to verify response when UI router
         middlewares (into
                      [reitit.mddwr.ex/exception-middleware
                       reitit.mddwr.muuntaja/format-negotiate-middleware

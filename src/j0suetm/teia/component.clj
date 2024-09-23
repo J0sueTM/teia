@@ -1,21 +1,42 @@
 (ns j0suetm.teia.component
-  "Teia's base concept."
+  "# Components
+
+  Components are Teia's most basic building block.
+  
+  A component contains the following data:
+
+  - `:name`     An identifiable name
+
+  - `:template` A function that accepts its state and returns the HTML
+                template.
+
+  - `:props`    Its inner state.
+
+  - `:components` Its inner components, passed by parameters to minimize
+                  external state. This is helpful when testing later on.
+                  By having all its data from within, it becomes simpler
+                  to manipulate it, beit whatever."
   (:refer-clojure :exclude [compile]))
 
+;; ## Lifetime
+
+;; The Stateful protocol defines the point on when a component has
+;; both props and inner components defined.
+;;
+;; `build` builds a component map, which can be used by `compile` later.
+;; Inner components can be accessed and manipulated just like props, but
+;; are separated since they need their own state.
+;;
+;; `compile` compiles component states to itself. Basically `renders`
+;; the given component based on its props, after recursively `rendering`
+;; its inner components.
 (defprotocol Stateful
   (build
     [cmp]
     [cmp props]
-    [cmp props components]
-    "Builds a component map, which can be used by `compile` later.
-
-Inner components can be accessed and manipulated just like props, but
-are separated since they need their own state.")
+    [cmp props components])
   (compile
-    [cmp]
-    "Compiles component states to itself. Basically 'renders' the
-given component based on its props, after recursively 'rendering' its
-inner components."))
+    [cmp]))
 
 (def failure-cmp
   "Barebones component for failure showcase.
@@ -71,9 +92,9 @@ inner components."))
             {:reason (str "failed to compile component " name)
              :exception e})))))))
 
-;; Alias to pipe `build`->`compile` directly. Makes life easier when
-;; building a component from within another one.
 (defn $
+  "Alias to pipe `build`->`compile` directly. Makes life easier when
+  building a component from within another one."
   ([cmp] ($ cmp {} []))
   ([cmp props] ($ cmp props []))
   ([cmp props components]
@@ -83,4 +104,4 @@ inner components."))
 
 (defn component?
   [data]
-  (and (:name data) (:template data)))
+  (instance? Component data))
