@@ -153,8 +153,8 @@
                      :uri "/greet/failing"})
                    (:body)
                    (slurp)
-                   (re-find
-                    #"failed to compile component :failing")))
+                   (re-find #"failed to compile component :failing")
+                   (some?)))
 
         (t/is (= "<div><p>j0suetm</p><button>click here, j0suetm</button></div>"
                  (->> ((reitit/ring-handler

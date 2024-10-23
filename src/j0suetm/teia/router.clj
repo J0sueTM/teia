@@ -8,6 +8,7 @@
    [hiccup2.core :as hiccup]
    [j0suetm.teia.component :as teia.cmp]
    [malli.util]
+   [ring.adapter.jetty :as ring.jetty]
    [muuntaja.core :as muuntaja]
    [muuntaja.format.core :as muuntaja.fmt]
    [reitit.coercion.malli :as reitit.coercion.malli]
@@ -179,3 +180,7 @@
       :data {:coercion coercion
              :muuntaja muuntaja
              :middleware middlewares}})))
+
+(defn serve!
+  [router & [options]]
+  (ring.jetty/run-jetty router options))
