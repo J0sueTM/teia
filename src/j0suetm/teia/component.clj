@@ -95,12 +95,12 @@
 (defn $
   "Alias to pipe `build`->`compile` directly. Makes life easier when
   building a component from within another one."
-  ([cmp] ($ cmp {} []))
-  ([cmp props] ($ cmp props []))
-  ([cmp props components]
-   (:compiled
-    (compile
-     (build cmp props components)))))
+  [cmp & [props components]]
+  (let [props (or props {})
+        components (or components [])]
+    (:compiled
+     (compile
+      (build cmp props components)))))
 
 (defn component?
   [data]

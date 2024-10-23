@@ -36,17 +36,15 @@
 
    (t/testing "inner components;"
      (t/is (= [:div [:p "hello teia"]]
-              (-> (teia.cmp/build
-                   (teia.cmp/->Component
-                    :cmp-1
-                    (fn [{:keys [components]}]
-                      [:div
-                       ($ (:hello components)
-                          {:name "teia"})]))
-                   {}
-                   [(teia.cmp/->Component
-                     :hello
-                     (fn [{:keys [props]}]
-                       [:p (str "hello " (:name props))]))])
-                  (teia.cmp/compile)
-                  (:compiled)))))])
+              (teia.cmp/$
+               (teia.cmp/->Component
+                :cmp-1
+                (fn [{:keys [components]}]
+                  [:div
+                   ($ (:hello components)
+                      {:name "teia"})]))
+               {}
+               [(teia.cmp/->Component
+                 :hello
+                 (fn [{:keys [props]}]
+                   [:p (str "hello " (:name props))]))]))))])
