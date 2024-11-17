@@ -1,7 +1,7 @@
 (ns j0suetm.teia.component-test
   (:require
    [clojure.test :as t]
-   [j0suetm.teia.component :as teia.cmp :refer [$]]))
+   [j0suetm.teia.component :as teia.cmp]))
 
 (t/deftest compile-test
   [(t/testing "props;"
@@ -41,7 +41,7 @@
                 :cmp-1
                 (fn [{:keys [components]}]
                   [:div
-                   ($ (:hello components)
+                   (teia.cmp/$ (:hello components)
                       {:name "teia"})]))
                {}
                [(teia.cmp/->Component

@@ -26,5 +26,6 @@
     [:button (:text props)])
 
   (cmp/$ my-cmp {:username "j0suetm"} [my-button])
+  ;; => [:div [:p "j0suetm"] [:button "click me"]]
   ;;
   )
