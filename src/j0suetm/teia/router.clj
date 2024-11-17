@@ -183,4 +183,4 @@
 
 (defn serve!
   [router & [options]]
-  (ring.jetty/run-jetty router options))
+  (ring.jetty/run-jetty (reitit/ring-handler router) options))

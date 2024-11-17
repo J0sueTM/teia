@@ -18,9 +18,17 @@
 
 (defn -main
   [& _]
-  (teia.router/serve! router {:port 7314 :join? false}))
+  (let [srv (teia.router/serve! router {:port 7314 :join? false})]
+    (.addShutdownHook
+     Runtime/getRuntime
+     (Thread. ^Runnable #(.stop srv)))))
 
 (comment
   (-main)
+
+  (def srv 
+    (teia.router/serve! router {:port 7314 :join? false}))
+
+  (.stop srv)
   ;;
   )
