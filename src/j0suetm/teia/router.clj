@@ -49,8 +49,7 @@
 
 (def html-format
   "Muuntaja format for text/html"
-  (let [enc-fn (fn [_]
-                 component->html-encoder)]
+  (let [enc-fn (fn [_] component->html-encoder)]
     (muuntaja.fmt/map->Format
      {:name "text/html"
       :encoder [enc-fn]})))

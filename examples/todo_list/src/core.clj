@@ -3,18 +3,27 @@
    [j0suetm.teia.core :as teia]
    [j0suetm.teia.router :as teia.router]))
 
+(def todos
+  (atom []))
+
 (teia/defcmp todo-list
-  [_]
-  [:ul
-   [:li "todo 1"]
-   [:li "todo 2"]])
+  [{:keys [props]}]
+  [:div
+   (if-let [todos (:todos props)]
+     [:ul
+      (for [todo todos]
+        [:li [:p (:content todo)]])]
+     [:p "There are no todos. Good job!"])
+   [:button "Add TODO"]])
 
 (def router
   (teia.router/build
    [["/todos"
      {:get
       {:component todo-list
-       :handler (fn [_] {:status 200})}}]]))
+       :handler (fn [_]
+                  {:status 200
+                   :body @todos})}}]]))
 
 (defn -main
   [& _]
@@ -26,7 +35,7 @@
 (comment
   (-main)
 
-  (def srv 
+  (def srv
     (teia.router/serve! router {:port 7314 :join? false}))
 
   (.stop srv)
