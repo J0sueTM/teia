@@ -95,6 +95,14 @@
                         (:body)
                         (muuntaja/decode "application/json")))))]))
 
+   (t/testing "htmx route;"
+     [(t/is (= 200
+               (:status
+                ((reitit/ring-handler
+                  (teia.router/build [] {:htmx-version "2.0.4"}))
+                 {:request-method :get
+                  :uri "/assets/js/htmx.min.js"}))))])
+
    (t/testing "component route;"
      (let [routes [["/greet/:name"
                     {:get

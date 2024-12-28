@@ -7,6 +7,7 @@
   (:require
    [hiccup2.core :as hiccup]
    [j0suetm.teia.component :as teia.cmp]
+   [j0suetm.teia.htmx :as teia.htmx]
    [malli.util]
    [ring.adapter.jetty :as ring.jetty]
    [muuntaja.core :as muuntaja]
@@ -134,6 +135,20 @@
     (partial apply component-route->reitit-route)
     sibling-routes)))
 
+(defn push-htmx-src-route
+  "Pushes a route into `routes` that returns the source code of given
+  `version` of HTMX."
+  [routes version]
+  ;; TODO: error handling. What if `htmx-src` is nil?
+  (let [htmx-src (teia.htmx/get-src version)]
+    (conj
+     routes
+     ["/assets/js/htmx.min.js"
+      {:get
+       {:handler
+        (fn [_]
+          {:status 200 :body htmx-src})}}])))
+
 (defn build
   "Builds a reitit router, adapting component routes to reitit routes
   through the way.
@@ -141,10 +156,13 @@
   Options:
 
   - `:default-format` The response data format. UI router, i.e `text/html`
-                      by default."
+                      by default.
+  - `:htmx-version`   The version of HTMX to use. Only works if building
+                      an UI router."
   [routes & [options]]
-  (let [{:keys [default-format]
-         :or {default-format "text/html"}} options
+  (let [{:keys [default-format htmx-version]
+         :or {default-format "text/html"
+              htmx-version "2.0.4"}} options
 
         ui-router? (= default-format "text/html")
 
@@ -174,7 +192,12 @@
                      (when ui-router?
                        [reitit.coercion/coerce-response-middleware]))]
     (reitit/router
-     (map #(apply component-route->reitit-route %) routes)
+     (let [routes' (map
+                    #(apply component-route->reitit-route %)
+                    routes)]
+       (if ui-router?
+         (push-htmx-src-route routes' htmx-version)
+         routes'))
      {:exception reitit.pretty/exception
       :data {:coercion coercion
              :muuntaja muuntaja
