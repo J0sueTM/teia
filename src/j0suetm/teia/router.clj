@@ -29,24 +29,20 @@
   (reify
     muuntaja.fmt/EncodeToBytes
     (encode-to-bytes [_ data charset]
-      (-> (if (teia.cmp/component? data)
-            (:compiled (teia.cmp/compile data))
-            data)
-          (hiccup/html)
-          (str)
-          (.getBytes ^String charset)))
+      (let [compiled (:compiled (teia.cmp/compile data))
+            html (if (= (:type data) :page)
+                   (hiccup/html (hiccup/raw "<!DOCTYPE html>") compiled)
+                   (hiccup/html compiled))]
+        (.getBytes (str html) ^String charset)))
 
     muuntaja.fmt/EncodeToOutputStream
     (encode-to-output-stream [_ data charset]
       (fn [^OutputStream output-stream]
-        (.write
-         output-stream
-         (-> (if (teia.cmp/component? data)
-               (:compiled (teia.cmp/compile data))
-               data)
-             (hiccup/html)
-             (str)
-             (.getBytes ^String charset)))))))
+        (let [compiled (:compiled (teia.cmp/compile data))
+              html (if (= (:type data) :page)
+                     (hiccup/html (hiccup/raw "<!DOCTYPE html>") compiled)
+                     (hiccup/html compiled))]
+          (.write output-stream (.getBytes (str html) ^String charset)))))))
 
 (def html-format
   "Muuntaja format for text/html"
@@ -139,7 +135,6 @@
   "Pushes a route into `routes` that returns the source code of given
   `version` of HTMX."
   [routes version]
-  ;; TODO: error handling. What if `htmx-src` is nil?
   (let [htmx-src (teia.htmx/get-src version)]
     (conj
      routes
@@ -202,6 +197,20 @@
       :data {:coercion coercion
              :muuntaja muuntaja
              :middleware middlewares}})))
+
+(defn build-ui-router
+  "Similar to `build`, but instead of expecting routes, it expects
+  components, which will be built into a route tree and then passed to
+  `build`.
+
+  If a component has no handler, a route isn't generated, since it does
+  nothing besides being rendered.
+
+  The route name is derived from the component name. So if a component
+  is named `:my-component`, its route will be `/components/my-component`"
+  [components & [options]]
+  #_TODO
+  ())
 
 (defn serve!
   [router & [options]]

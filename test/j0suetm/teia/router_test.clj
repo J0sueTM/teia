@@ -103,6 +103,32 @@
                  {:request-method :get
                   :uri "/assets/js/htmx.min.js"}))))])
 
+   (t/testing "page route;"
+     [(t/is (= (str "<!DOCTYPE html>"
+                    "<html>"
+                    "<head></head>"
+                    "<body><p>Hello darling!</p></body>"
+                    "</html>")
+               (-> ((reitit/ring-handler
+                     (teia.router/build
+                      [["/hello-page"
+                        {:get
+                         {:component (teia.cmp/->Component
+                                      :hello-page
+                                      (fn [{:keys [props]}]
+                                        [:html
+                                         [:head]
+                                         [:body
+                                          [:p (str "Hello " (:name props) "!")]]])
+                                      :page)
+                          :handler (fn [_]
+                                     {:status 200
+                                      :props {:name "darling"}})}}]]))
+                    {:request-method :get
+                     :uri "/hello-page"})
+                   (:body)
+                   (slurp))))])
+
    (t/testing "component route;"
      (let [routes [["/greet/:name"
                     {:get

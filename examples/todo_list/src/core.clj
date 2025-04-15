@@ -1,10 +1,11 @@
 (ns core
   (:require
    [j0suetm.teia.core :as teia]
+   [j0suetm.teia.component :as teia.cmp]
    [j0suetm.teia.router :as teia.router]))
 
-(def todos
-  (atom []))
+(defonce todos
+  (atom nil))
 
 (teia/defcmp todo-list
   [{:keys [props]}]
@@ -16,6 +17,13 @@
      [:p "There are no todos. Good job!"])
    [:button "Add TODO"]])
 
+(teia/defpage home-page
+  [{:keys [components]}]
+  []
+  [:div
+   [:p "Teia's TODO App"]
+   (teia.cmp/$ (:todo-list components))])
+
 (def router
   (teia.router/build
    [["/todos"
@@ -23,7 +31,11 @@
       {:component todo-list
        :handler (fn [_]
                   {:status 200
-                   :body @todos})}}]]))
+                   :props {:todos @todos}})}}]
+    ["/"
+     {:get
+      {:component home-page
+       :handler (fn [_] {:status 200})}}]]))
 
 (defn -main
   [& _]
@@ -37,7 +49,7 @@
 
   (def srv
     (teia.router/serve! router {:port 7314 :join? false}))
-
+ 
   (.stop srv)
   ;;
   )

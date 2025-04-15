@@ -47,4 +47,18 @@
                [(teia.cmp/->Component
                  :hello
                  (fn [{:keys [props]}]
-                   [:p (str "hello " (:name props))]))]))))])
+                   [:p (str "hello " (:name props))]))]))))
+
+   (t/testing "page components;"
+     (t/is (= [:html
+               [:head]
+               [:body [:p "hello darling!"]]]
+              (teia.cmp/$
+               (teia.cmp/->Component
+                :hello-page
+                (fn [{:keys [props]}]
+                  [:html
+                   [:head]
+                   [:body [:p (str "hello " (:name props) "!")]]])
+                :page)
+               {:name "darling"}))))])

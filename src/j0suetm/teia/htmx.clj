@@ -1,8 +1,8 @@
 (ns j0suetm.teia.htmx
   (:require [clj-http.client :as client]))
 
-(defonce ^:private src
-  "HTMX's source code."
+;; HTMX's source code.
+(defonce src
   (atom nil))
 
 (defn get-src

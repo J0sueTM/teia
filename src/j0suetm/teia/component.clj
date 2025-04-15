@@ -53,7 +53,7 @@
                    (for [trace stacktrace]
                      [:li [:p trace]])])])})
 
-(defrecord Component [name template]
+(defrecord Component [name template type]
   Stateful
   (build
     [cmp]
@@ -101,7 +101,3 @@
     (:compiled
      (compile
       (build cmp props components)))))
-
-(defn component?
-  [data]
-  (instance? Component data))
